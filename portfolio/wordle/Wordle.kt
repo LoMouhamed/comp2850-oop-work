@@ -4,10 +4,12 @@ import kotlin.random.Random
 import java.util.NoSuchElementException
 
 fun isValid(word: String): Boolean {
-    return word.length == 5 && word.all { it.isLetter() }
-}
+    // check if the word length is exactly 5
+    return word.length == 5
+    }
 
 fun readWordList(filename: String): MutableList<String> {
+// reads the file, filters valid words, and makes them uppercase
     return try {
         File(filename)
             .readLines()
@@ -15,26 +17,27 @@ fun readWordList(filename: String): MutableList<String> {
             .map { it.uppercase() } 
             .toMutableList()
     } catch (e: FileNotFoundException) {
+        // return an empty list if the file is not found
         println("Error: Word list file '$filename' not found.")
         mutableListOf() 
     }
 }
-
+// Picks and removes a random word from the list to avoid repeats
 fun pickRandomWord(words: MutableList<String>): String {
     if (words.isEmpty()) {
         throw NoSuchElementException("Cannot pick a word from an empty list.")
     }
+    // removeAt removes the word from the list and returns it at the random index
     return words.removeAt(Random.nextInt(words.size))
 }
-
+// keeps prompting the user until a valid guess is entered
 fun obtainGuess(attempt: Int): String {
     while (true) {
         print("Attempt $attempt: ")
-        // readln() reads a line from standard input
         val guess = readln()
 
         if (isValid(guess)) {
-            // Normalize to uppercase for consistent comparison
+            // return the guess in uppercase to match the target word format
             return guess.uppercase()
         } else {
             println("Invalid guess. Must be exactly 5 letters.")
@@ -43,7 +46,7 @@ fun obtainGuess(attempt: Int): String {
 }
 
 fun evaluateGuess(guess: String, target: String): List<Int> {
-    // mapIndexed gives us the index and the character at that index
+    // Compare each character in the guess to the target word
     return guess.mapIndexed { index, char ->
         if (char == target[index]) {
             1 // Match
@@ -54,7 +57,7 @@ fun evaluateGuess(guess: String, target: String): List<Int> {
 }
 
 fun displayGuess(guess: String, matches: List<Int>) {
-    // Create the output string by mapping each character
+    // prints the guess but replaces non-matching letters with '?'
     val output = guess.mapIndexed { index, char ->
         if (matches[index] == 1) {
             char // Keep the character if it's a match
