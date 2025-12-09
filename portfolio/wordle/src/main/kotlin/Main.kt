@@ -1,30 +1,56 @@
+import java.io.File
+import kotlin.random.Random
+
 fun main() {
-	val wordFile = "data/words.txt"
-	val words = readWordList(wordFile)
+    // Reads the list of words from the specific file path
+    val words = readWordList("data/words.txt")
 
-	if (words.isEmpty()) {
-		println("No words available to play. Check '$wordFile' exists and contains 5-letter words.")
-		return
-	}
+    if (words.isEmpty()) {
+        println("Error: Could not read words from data/words.txt. Please check the file exists.")
+        return
+    }
 
-	val target = pickRandomWord(words) ?: run {
-		println("Failed to pick a target word.")
-		return
-	}
+    // Picks a random word to be the answer
+    val target = pickRandomWord(words) ?: return 
 
-	println("Welcome to Wordle (simple CLI). You have 6 attempts.")
+    // Sets the maximum number of attempts allowed
+    val maxAttempts = 10
+    var hasWon = false
 
-	val maxAttempts = 6
-	for (attempt in 1..maxAttempts) {
-		val guess = obtainGuess(attempt)
-		val matches = evaluateGuess(guess, target)
-		displayGuess(guess, matches)
+    println("Welcome to Wordle! You have $maxAttempts attempts.")
 
-		if (matches.all { it == 2 }) {
-			println("Congratulations — you guessed the word: $target")
-			return
-		}
-	}
+    // Loops through the allowed number of attempts
+    for (attempt in 1..maxAttempts) {
+        var guess = ""
+        
+        // Keeps asking for input until the user provides a valid 5 letter word
+        while (true) {
+            guess = obtainGuess(attempt)
+            if (isValid(guess)) {
+                break
+            } else {
+                println("Invalid guess. Please enter exactly 5 letters.")
+            }
+        }
 
-	println("Out of attempts. The word was: $target")
+        // Checks the guess against the target word
+        val results = evaluateGuess(guess, target)
+        
+        // Shows the user how they did
+        displayGuess(guess, results)
+
+        // Checks if the user won by seeing if all results are 1 so a match
+        if (results.all { it == 1 }) {
+            println("Congratulations! You guessed the word correctly.")
+            hasWon = true
+            break
+        }
+    }
+
+    // If the loop finishes and they haven't won, let them know the word
+    if (!hasWon) {
+        println("Game over! You ran out of guesses.")
+        println("The word was: $target")
+    }
 }
+

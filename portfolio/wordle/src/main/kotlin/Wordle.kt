@@ -1,72 +1,70 @@
 import java.io.File
+import java.io.FileNotFoundException
 import kotlin.random.Random
+import java.util.NoSuchElementException
 
 fun isValid(word: String): Boolean {
-	return word.length == 5 && word.all { it.isLetter() }
-}
+    // check if the word length is exactly 5
+    return word.length == 5
+    }
 
 fun readWordList(filename: String): MutableList<String> {
-	return try {
-		File(filename)
-			.readLines()
-			.filter { isValid(it) }
-			.map { it.uppercase() }
-			.toMutableList()
-	} catch (e: Exception) {
-		// If file read fails, return an empty list
-		mutableListOf()
-	}
+// reads the file, filters valid words, and makes them uppercase
+    return try {
+        File(filename)
+            .readLines()
+            .filter { isValid(it) } 
+            .map { it.uppercase() } 
+            .toMutableList()
+    } catch (e: FileNotFoundException) {
+        // return an empty list if the file is not found
+        println("Error: Word list file '$filename' not found.")
+        mutableListOf() 
+    }
 }
-
-fun pickRandomWord(words: MutableList<String>): String? {
-	if (words.isEmpty()) return null
-	return words.removeAt(Random.nextInt(words.size))
+// Picks and removes a random word from the list to avoid repeats
+fun pickRandomWord(words: MutableList<String>): String {
+    if (words.isEmpty()) {
+        throw NoSuchElementException("Cannot pick a word from an empty list.")
+    }
+    // removeAt removes the word from the list and returns it at the random index
+    return words.removeAt(Random.nextInt(words.size))
 }
-
+// keeps prompting the user until a valid guess is entered
 fun obtainGuess(attempt: Int): String {
-	while (true) {
-		print("Attempt $attempt: ")
-		val guess = readlnOrNull() ?: ""
-		if (isValid(guess)) return guess.uppercase()
-		println("Invalid guess. Must be exactly 5 letters.")
-	}
+    while (true) {
+        print("Attempt $attempt: ")
+        val guess = readln()
+
+        if (isValid(guess)) {
+            // return the guess in uppercase to match the target word format
+            return guess.uppercase()
+        } else {
+            println("Invalid guess. Must be exactly 5 letters.")
+        }
+    }
 }
 
 fun evaluateGuess(guess: String, target: String): List<Int> {
-	val result = MutableList(5) { 0 }
-	val targetChars = target.toMutableList()
-	val guessChars = guess.toMutableList()
-
-	// Pass 1: perfect matches (2)
-	for (i in 0 until 5) {
-		if (guessChars[i] == targetChars[i]) {
-			result[i] = 2
-			targetChars[i] = '\u0000'
-			guessChars[i] = '\u0001'
-		}
-	}
-
-	// Pass 2: partial matches (1)
-	for (i in 0 until 5) {
-		if (result[i] != 2) {
-			val ch = guessChars[i]
-			val idx = targetChars.indexOf(ch)
-			if (idx != -1) {
-				result[i] = 1
-				targetChars[idx] = '\u0000'
-			}
-		}
-	}
-	return result
+    // Compare each character in the guess to the target word
+    return guess.mapIndexed { index, char ->
+        if (char == target[index]) {
+            1 // Match
+        } else {
+            0 // No match
+        }
+    }
 }
 
 fun displayGuess(guess: String, matches: List<Int>) {
-	val output = guess.mapIndexed { index, char ->
-		when (matches[index]) {
-			2 -> char.toString()
-			1 -> char.toString().lowercase()
-			else -> "?"
-		}
-	}.joinToString(" ")
-	println("Hint: $output")
+    // prints the guess but replaces non-matching letters with '?'
+    val output = guess.mapIndexed { index, char ->
+        if (matches[index] == 1) {
+            char // Keep the character if it's a match
+        } else {
+            '?' // Replace with '?' if no match
+        }
+    }.joinToString("") // Join the list of characters back into a String
+
+    println(output)
 }
